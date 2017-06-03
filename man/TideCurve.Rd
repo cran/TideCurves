@@ -8,22 +8,22 @@ TideCurve(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, aedate,
   aetime, ssdate, sstime, sedate, setime)
 }
 \arguments{
-\item{dataInput}{A data frame with the columns observation_date, observation_time and height. See attached data for correct    formats.}
+\item{dataInput}{A data frame with the columns observation_date, observation_time and height. See attached data for correct formats.}
 
 \item{otz}{The time zone of the observations}
 
 \item{km}{The number of nodes between two consecutive mean moon transits. Shall be less or equal to: round(1440 [min] / time step [min])
 Example: Time step 5 min: Use km = 288 or even smaller. Leave on default (km = -1) and supply mindt, when unsure.}
 
-\item{mindt}{Observation time step in [min]}
+\item{mindt}{Observation time step in [min]. Default is 30.}
 
 \item{asdate}{A string indication the date you want the analysis to start with. Format: "yyyy/mm/dd".}
 
 \item{astime}{A string indicating the time you want the analysis to start with. Format: "hh:mm:ss"}
 
-\item{aedate}{A string indication the date you want the analysis to start with. Format: "yyyy/mm/dd".}
+\item{aedate}{A string indication the date you want the analysis to end with. Format: "yyyy/mm/dd".}
 
-\item{aetime}{A string indicating the time you want the analysis to start with. Format: "hh:mm:ss"}
+\item{aetime}{A string indicating the time you want the analysis to end with. Format: "hh:mm:ss"}
 
 \item{ssdate}{Synthesis start date. This indicates the date you want your tide curve to start with. Format: See above}
 
@@ -40,7 +40,6 @@ Returns a list with elements of the analysis, fitting and the tidal curve for gi
 \item{tide.curve}{The solar tide curve as a data.table object}
 \item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis}
 \item{diff.analyse}{Time in days spanning the analysis}
-\item{i.analyse}{How many different cases where used in the analysis}
 }
 \description{
 Takes a data frame as input with three columns (see example dataset) and returns a tide curve.
@@ -64,4 +63,3 @@ Godin, Gabriel (1972) The Analysis of Tides. Toronto, 264pp
 
 \url{http://www.bsh.de/de/Produkte/Buecher/Berichte_/Bericht50/BSH-Bericht50.pdf}
 }
-

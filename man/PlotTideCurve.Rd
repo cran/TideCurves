@@ -15,4 +15,3 @@ Generates a plot
 \description{
 Plots the tide curve and residuum to give an overview of the fitting results.
 }
-

@@ -21,4 +21,3 @@ The predictor vector. Values between -1, 1.
 \description{
 Returns predictor vector for design matrix from 44 astronomical angular velocities.
 }
-

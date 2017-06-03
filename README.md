@@ -29,7 +29,7 @@ sapply(tideObservation, typeof)
 #>      "character"      "character"         "double"
 ```
 
-You can now use your data as input for the function 'TideCurve'. Setting the periods for analyzing and synthesizing and wait for the table to be produced.
+You can now use your data as input for the function 'TideCurve'. Setting the periods for analyzing and synthesizing and wait for the table to be produced. Afterwards you can compute the differences between the observed data and lunar and solar tide curves
 
 ``` r
 mytidecurve<-TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
@@ -37,4 +37,6 @@ mytidecurve<-TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
              aetime = "23:30:00",      ssdate = "2015/12/17",
              sstime = "00:00:00",      sedate = "2015/12/31",
              setime = "23:30:00")
+
+mydifferences <- ResCurve(tcData = mytidecurve, obsData = tideObservation)
 ```

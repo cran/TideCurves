@@ -17,4 +17,3 @@ tideObservation
 A sample dataset containing observation date, time and height of high and low water
 }
 \keyword{datasets}
-

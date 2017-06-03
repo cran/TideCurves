@@ -5,15 +5,15 @@
 #' One mean lunar day lasts 1.0350501 mean solar days.
 #' Therefore the analysis time period
 #' should start one lunar day after the first observation and end one lunar day before the last observation.
-#' @param dataInput A data frame with the columns observation_date, observation_time and height. See attached data for correct    formats.
+#' @param dataInput A data frame with the columns observation_date, observation_time and height. See attached data for correct formats.
 #' @param otz The time zone of the observations
 #' @param km The number of nodes between two consecutive mean moon transits. Shall be less or equal to: round(1440 [min] / time step [min])
 #' Example: Time step 5 min: Use km = 288 or even smaller. Leave on default (km = -1) and supply mindt, when unsure.
-#' @param mindt Observation time step in [min]
+#' @param mindt Observation time step in [min]. Default is 30.
 #' @param asdate A string indication the date you want the analysis to start with. Format: "yyyy/mm/dd".
 #' @param astime A string indicating the time you want the analysis to start with. Format: "hh:mm:ss"
-#' @param aedate A string indication the date you want the analysis to start with. Format: "yyyy/mm/dd".
-#' @param aetime A string indicating the time you want the analysis to start with. Format: "hh:mm:ss"
+#' @param aedate A string indication the date you want the analysis to end with. Format: "yyyy/mm/dd".
+#' @param aetime A string indicating the time you want the analysis to end with. Format: "hh:mm:ss"
 #' @param ssdate Synthesis start date. This indicates the date you want your tide curve to start with. Format: See above
 #' @param sstime Synthesis start time. The starting time for your tide table. Format: See above
 #' @param sedate Synthesis end date. Format: See above
@@ -24,7 +24,6 @@
 #' \item{tide.curve}{The solar tide curve as a data.table object}
 #' \item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis}
 #' \item{diff.analyse}{Time in days spanning the analysis}
-#' \item{i.analyse}{How many different cases where used in the analysis}
 #' @references  Godin, Gabriel (1972) The Analysis of Tides. Toronto, 264pp
 #' @references \url{http://tidesandcurrents.noaa.gov/publications/glossary2.pdf}
 #' @references \url{http://www.bsh.de/de/Produkte/Buecher/Berichte_/Bericht50/BSH-Bericht50.pdf}
@@ -43,6 +42,7 @@
 #' @importFrom stats sd
 #' @importFrom fields splint
 #' @export
+#'
 TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, aedate, aetime, ssdate, sstime, sedate, setime) {
 
   if(km == -1){
@@ -70,84 +70,120 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   tdtobsn      <- tdtobs * (nspline - 1)
   tdtobsn.105  <- tdtobsn + 10^-5
   tdtobs.105   <- tdtobs + 10^-5
-  tmondkm      <- numeric()
+  otz.24       <- otz / 24
+  tmondkm      <- numeric(length = km)
 
   for (i in 1:km) {
     tmondkm[i] <- tmmh * (i - 0.5)
   }
 
-  chron.beob      <- chron(dates. = as.character(dataInput$observation_date),
-                           times. = as.character(dataInput$observation_time),
+  chron.beob      <- chron(dates. = dataInput$observation_date,
+                           times. = dataInput$observation_time,
                            format = c(dates = "y/m/d", times = "h:m:s"),
                            out.format = c(dates = "y/m/d", times = "h:m:s"))
 
-  diff.days       <- as.numeric((chron.beob - chron.origin) - otz / 24)
+  diff.days       <- as.numeric((chron.beob - chron.origin) - otz.24)
   length.diffdays <- length(diff.days)
   moona           <- as.numeric(floor((diff.days[1] - tplus) / tm24))
   moone           <- as.numeric(floor((diff.days[length.diffdays] - tplus) / tm24))
-  tmmt.numm       <- numeric()
+  tmmt.numm       <- numeric(length = length(moona:moone))
 
   for(i in moona:moone){
     tmmt.numm[i] <- i * tm24 + tplus
   }
-
+  #Analysis
   asdate.time <- chron(dates. = asdate,
                        times. = astime,
                        format = c(dates = "y/m/d", times = "h:m:s"),
-                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - (otz / 24)
+                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - (otz.24)
 
   aedate.time <- chron(dates. = aedate,
                        times. = aetime,
                        format = c(dates = "y/m/d", times = "h:m:s"),
-                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - (otz / 24)
+                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - (otz.24)
 
   numma   <- as.numeric(floor((asdate.time - tplus) / tm24))
   numme   <- as.numeric(floor((aedate.time - tplus) / tm24))
-  xa      <- numeric()
-  ya      <- numeric()
-  ty      <- numeric()
 
-  data.matrix <- matrix(0.0, nrow = length.diffdays, ncol = 4)
-  colnames(data.matrix) <- c("numm","imm", "tmmttmond", "height")
-  numm <- NULL
-  data.matrix <- data.table(data.matrix)
+  tdiff.analyse    <- numme - numma + 1
 
-  #can put the first floor call outside the loop?
-  floored   <- floor((diff.days - tplus) / tm24)
-  tdtobs.2  <- tdtobs / 2
-  imm       <- numeric()
-  tmmttmond <- numeric()
-  tmd       <- numeric()
-  dx        <- numeric()
+  #Synthesis
+  ssdate.time <- chron(dates. = ssdate,
+                       times. = sstime,
+                       format = c(dates = "y/m/d", times = "h:m:s"),
+                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - otz.24
+  sedate.time <- chron(dates. = sedate,
+                       times. = setime,
+                       format = c(dates = "y/m/d", times = "h:m:s"),
+                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - otz.24
 
-  for (ii in 4 : (length.diffdays - 3)) {
-    #ik        <- floor((diff.days[i] - tplus) / tm24)
+  nummsa  <- as.numeric(floor((ssdate.time - tplus) / tm24))
+  nummse  <- as.numeric(floor((sedate.time - tplus) / tm24))
+
+  #Computing Funcs for all cases
+  min_numm <- min(c(numma, nummsa))
+  max_numm <- max(c(numme, nummse))
+
+  xdesign.matrix <- matrix(0.0, nrow=(max_numm - min_numm + 1), ncol = 90)
+  xdesign.matrix[, 1] <- seq.int(min_numm, max_numm, 1)
+
+  for(i in 1:nrow(xdesign.matrix)){
+    xdesign.matrix[i, 2:90] <- Funcs(xi = xdesign.matrix[i, 1], tdiff = tdiff.analyse)
+  }
+
+  xa                    <- numeric(length = 7)
+  ya                    <- numeric(length = 7)
+  ty                    <- numeric()
+  data.matrix           <- matrix(0.0, nrow = length.diffdays, ncol = 4)
+  colnames(data.matrix) <- c("numm", "imm", "tmmttmond", "height")
+  numm                  <- NULL
+  data.matrix           <- data.table(data.matrix)
+  floored               <- floor((diff.days - tplus) / tm24)
+  tdtobs.2              <- tdtobs / 2
+  imm                   <- numeric()
+  tmmttmond             <- numeric()
+  tmd                   <- numeric()
+  dx                    <- numeric()
+  ld.3                  <- length.diffdays - 3
+
+  for (ii in 4 : ld.3) {
     ik <- floored[ii]
+
     if((ik < numma) || (ik > numme)) next
+
     imm       <- floor((diff.days[ii] - tmmt.numm[ik]) / tmmh) + 1
     tmmttmond <- tmmt.numm[ik] + tmondkm [imm]
     tmd       <- diff.days[ii] - tmmttmond
+
     if (abs(tmd) > tdtobs.2) next
+
     insp <- 0
     for (j in (ii - 3) : (ii + 3)){
       insp     <- insp + 1
       xa[insp] <- diff.days[j]
       ya[insp] <- height[j]
-
     }
     dx       <- xa[insp] - xa[1]
+
     if(dx > tdtobsn.105) next
+
     ty                 <- splint(xa, ya, tmmttmond)
 
-    set(data.matrix,i = ii, j = 1L, value = ik)
-    set(data.matrix,i = ii, j = 2L, value = imm)
-    set(data.matrix,i = ii, j = 3L, value = tmmttmond)
-    set(data.matrix,i = ii, j = 4L, value = ty)
-
+    set(data.matrix, i = ii, j = 1L, value = ik)
+    set(data.matrix, i = ii, j = 2L, value = imm)
+    set(data.matrix, i = ii, j = 3L, value = tmmttmond)
+    set(data.matrix, i = ii, j = 4L, value = ty)
   }
 
-  tdiff.analyse    <- numme - numma + 1
+  #Prepare joins on numm for xdesign and design.frame
+  colnames(xdesign.matrix) <- c("numm", paste0("V","", seq(1:89)))
+  xdesign.matrix           <- data.table(xdesign.matrix)
+
+  setkey(xdesign.matrix, numm)
+  setkey(data.matrix, numm)
+
   design.frame     <- data.matrix[(numm >= numma) & (numm <= numme)]
+  design.frame     <- xdesign.matrix[design.frame]
 
   lm.fits             <- list()
   fitting.coef        <- list()
@@ -157,76 +193,65 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   design.list         <- list()
 
   for(k in 1 : km) {
-    predictor     <- design.frame[imm == k, "numm", with = FALSE]$numm
-    design.matrix <- matrix(nrow = length(predictor), ncol = 89)
-
-    for(i in 1 : nrow(design.matrix)) {
-      design.matrix[i, ] <- Funcs(xi = predictor[i], tdiff = tdiff.analyse)
-    }
-
-    predictant    <- design.frame[imm == k, "height",  with = FALSE]
-    temp.design   <- data.table(design.matrix, predictant, predictor)
+    temp.design   <- design.frame[imm == k, ]
+    setkey(temp.design, height)
     temp.design   <- temp.design[(height >= (mean(height) - 3 * sd(height))) & (height <= (mean(height) +  3 * sd(height)))]
-    i.analyse[k,] <- nrow(temp.design)
-    lm.fitting    <- lm.fit(x = as.matrix(temp.design[, !c("predictor","height"), with = FALSE]),
-                            y = as.matrix(temp.design[,"height", with = FALSE]))
+
+    lm.fitting    <- lm.fit(x = as.matrix(temp.design[, !c("height", "numm", "imm", "tmmttmond"), with = FALSE]),
+                            y = as.matrix(temp.design[, "height", with = FALSE]))
 
     lm.fits[[k]]      <- lm.fitting
     design.list[[k]]  <- temp.design
     fitting.coef[[k]] <- coef(lm.fitting)
+
+    fitting.coef[[k]][is.na(fitting.coef[[k]])] <- 0
   }
 
-  #Synthesis
-  ssdate.time <- chron(dates. = ssdate,
-                       times. = sstime,
-                       format = c(dates = "y/m/d", times = "h:m:s"),
-                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - otz / 24
-  sedate.time <- chron(dates. = sedate,
-                       times. = setime,
-                       format = c(dates = "y/m/d", times = "h:m:s"),
-                       out.format = c(dates = "y/m/d", times = "h:m:s")) - chron.origin - otz / 24
-
-  nummsa  <- as.numeric(floor((ssdate.time - tplus) / tm24))
-  nummse  <- as.numeric(floor((sedate.time - tplus) / tm24))
-  m.length     <- (nummse - nummsa + 1) * km
-  time1        <- numeric(length = m.length)
-  height       <- numeric(length = m.length)
-  tobstime     <- numeric(length = m.length)
-  afunc        <- vector()
-  coeff        <- vector()
+  m.length              <- (nummse - nummsa + 1) * km
+  time1                 <- numeric(length = m.length)
+  height                <- numeric(length = m.length)
+  tobstime              <- numeric(length = m.length)
+  afunc                 <- vector()
+  coeff                 <- numeric(length = km)
   time.height           <- matrix(1.0, nrow = (m.length), ncol = 4)
   colnames(time.height) <- c("height", "i", "k", "time1")
   time.height           <- data.table(time.height)
+
   options(chron.origin = c(month = 1, day = 1, year = 1900))
 
-  m <- 0L
+  #Lunar synthesis
+  mm <- as.matrix(xdesign.matrix[numm >= nummsa][numm <= nummse])
+  m  <- 0L
+  n  <- 0L
+
   for (ii in nummsa : nummse) {
-    afunc <- Funcs(ii, tdiff = tdiff.analyse)
+    n     <- n + 1L
+    afunc <- mm[n, 2:90]
     for (k in 1 : km) {
-      m <- m + 1L
-      coeff <- coefficients(lm.fits[[k]])
-      summe <- coeff[1]
-      for (h in 1 : 44){
-        if (is.na(coeff[h * 2])) next
-        summe <- summe + coeff[h * 2] * (afunc[h * 2]) + coeff[h * 2 + 1] * (afunc[h * 2 + 1])
-      }
+      m             <- m + 1L
+      coeff         <- fitting.coef[[k]]
+      summe         <- coeff %*% afunc
       time1[m]      <- ii * tm24 + tplus + (k - 0.5) * tmmh
       height[m]     <- summe
       tobstime[m]   <- round(time1[m] / tdtobs) * tdtobs
 
-      set(time.height,i = m, j = 1L, value = height[m])
-      set(time.height,i = m, j = 2L, value = ii)
-      set(time.height,i = m, j = 3L, value = k)
-      set(time.height,i = m, j = 4L, value = time1[m])
+      set(time.height, i = m, j = 1L, value = height[m])
+      set(time.height, i = m, j = 2L, value = ii)
+      set(time.height, i = m, j = 3L, value = k)
+      set(time.height, i = m, j = 4L, value = time1[m])
     }
   }
   time.height[,date_time := chron(dates. = time1)]
   setcolorder(time.height, c("date_time", "height", "i", "k", "time1"))
 
-  l <- 1L
-
-  tsyntstd <- numeric()
-  ty       <- numeric()
+  #Solar synthesis
+  l           <- 1L
+  xa          <- numeric(length = 7)
+  ya          <- numeric(length = 7)
+  tsyntstd    <- numeric(length = 1.04 * (m - 4 - 3 + 1))
+  ty          <- numeric(length = 1.04 * (m - 4 - 3 + 1))
+  ssdate.time <- as.numeric(ssdate.time)
+  sedate.time <- as.numeric(sedate.time)
 
   for(j in 4 : (m - 3)){
     tsyn  <- tobstime[j]
@@ -245,40 +270,34 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
 
     if(tdtt > (tdtobs.105)){
 
-      tsynn    <- tobstime[j] - tdtobs
+      tsynn       <- tobstime[j] - tdtobs
       ty[l]       <- splint(xa, ya, tsynn)
-      tsyntstd[l] <- tsynn + otz / 24
-      l <- l + 1L
+      tsyntstd[l] <- tsynn + otz.24
+      l           <- l + 1L
     }
-    ty[l]      <- splint(xa, ya, tsyn)
-    tsyntstd[l] <- tsyn + otz / 24
-    l <- l + 1L
+    ty[l]       <- splint(xa, ya, tsyn)
+    tsyntstd[l] <- tsyn + otz.24
+    l           <- l + 1L
   }
+
   #Add date/time columns to synthesis
   prediction_date <- NULL
   prediction_time <- NULL
-  date_time   <- NULL
-  tidal.curve <- data.table(date_time = chron(dates. = (tsyntstd + 1 / 864000)), height = ty)
-
+  date_time       <- NULL
+  tidal.curve     <- data.table(date_time = chron(dates. = (tsyntstd + 1 / 864000)), time1 = as.numeric(tsyntstd) + 1 / 864000, height = ty)
 
   tidal.curve[, prediction_date := strftime(dates(date_time), format = "%Y/%m/%d")]
-  tidal.curve[, prediction_time := paste(hours(date_time),
-                                           minutes(date_time),
-                                           seconds(date_time),
-                                           sep = ":")]
+  tidal.curve[, prediction_time := format(date_time, "%H:%M:%S")]
+  tidal.curve <- tidal.curve[(prediction_date != "1900/01/01" & height != 0)]
   time.height[, prediction_date := strftime(dates(date_time), format = "%Y/%m/%d")]
-  time.height[, prediction_time := paste(hours(date_time),
-                                         minutes(date_time),
-                                         seconds(date_time),
-                                         sep = ":")]
+  time.height[, prediction_time := format(chron(dates. = (round(as.numeric(date_time) * 86400, digits = 0) / 86400) + 1 / 864000), "%H:%M:%OS")]
 
-  #we return a list called report containing the tide curve (lunar and solar), diff.analyse, i.analyse and lm.coeff
+  #we return a list called report containing the tide curve (lunar and solar), diff.analyse, i.analyse and lm.coeff and data matrix
   report                 <- list()
-  report$data.matrix     <- data.matrix
+  report$data.matrix     <- data.matrix[(numm >= numma) & (numm <= numme)]
   report$synthesis.lunar <- time.height
   report$tide.curve      <- tidal.curve
   report$lm.coeff        <- fitting.coef
-  report$i.analyse       <- diff.days
   report$diff.analyse    <- tdiff.analyse
   return(report)
 }

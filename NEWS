@@ -1,0 +1,9 @@
+TideCurves 0.0.2
+----------------
+
+Changes:
+
+* The main TideCurve function is now way faster for big data, due to better coding and avoiding redundant function calls.
+* Added the function ResCurve to compute differences in observed data and synthesis.
+* The function PlotTideCurve is deprecated and will be removed in the next release. Please use ResCurve and make your own plot.
+* Changed the output of TideCurves. i.analyse is no longer part of the ouput & inter is now a column in tide.curve
