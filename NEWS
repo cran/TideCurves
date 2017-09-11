@@ -1,3 +1,14 @@
+TideCurves 0.0.3
+----------------
+
+Changes:
+
+* The Funcs function was changed. The computation of the relevant astronomical velocities is now more accurate. It now returns three values
+  as a list.
+* The PlotTideCurve function is no longer part of the package.
+* Minor changes in the documentation of the package.
+
+
 TideCurves 0.0.2
 ----------------
 

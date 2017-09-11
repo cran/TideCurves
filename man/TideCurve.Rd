@@ -35,9 +35,9 @@ Example: Time step 5 min: Use km = 288 or even smaller. Leave on default (km = -
 }
 \value{
 Returns a list with elements of the analysis, fitting and the tidal curve for given data
-\item{synthesis.lunar}{The lunar synthesis data as a data.table object}
+\item{synthesis.lunar}{The lunar synthesis data as a data.table object in UTC}
 \item{data.matrix}{The data needed for analysis}
-\item{tide.curve}{The solar tide curve as a data.table object}
+\item{tide.curve}{The solar tide curve as a data.table object (provided time zone)}
 \item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis}
 \item{diff.analyse}{Time in days spanning the analysis}
 }

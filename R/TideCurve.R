@@ -19,9 +19,9 @@
 #' @param sedate Synthesis end date. Format: See above
 #' @param setime Synthesis end time. Format: See above
 #' @return Returns a list with elements of the analysis, fitting and the tidal curve for given data
-#' \item{synthesis.lunar}{The lunar synthesis data as a data.table object}
+#' \item{synthesis.lunar}{The lunar synthesis data as a data.table object in UTC}
 #' \item{data.matrix}{The data needed for analysis}
-#' \item{tide.curve}{The solar tide curve as a data.table object}
+#' \item{tide.curve}{The solar tide curve as a data.table object (provided time zone)}
 #' \item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis}
 #' \item{diff.analyse}{Time in days spanning the analysis}
 #' @references  Godin, Gabriel (1972) The Analysis of Tides. Toronto, 264pp
@@ -88,7 +88,7 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   moone           <- as.numeric(floor((diff.days[length.diffdays] - tplus) / tm24))
   tmmt.numm       <- numeric(length = length(moona:moone))
 
-  for(i in moona:moone){
+  for(i in moona : moone){
     tmmt.numm[i] <- i * tm24 + tplus
   }
   #Analysis
@@ -123,12 +123,13 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   #Computing Funcs for all cases
   min_numm <- min(c(numma, nummsa))
   max_numm <- max(c(numme, nummse))
+  matrix.cols      <- length(Funcs(tdiff = tdiff.analyse, xi = max_numm)[[3]])
 
-  xdesign.matrix <- matrix(0.0, nrow=(max_numm - min_numm + 1), ncol = 90)
+  xdesign.matrix <- matrix(0.0, nrow=(max_numm - min_numm + 1), ncol = matrix.cols + 1)
   xdesign.matrix[, 1] <- seq.int(min_numm, max_numm, 1)
 
   for(i in 1:nrow(xdesign.matrix)){
-    xdesign.matrix[i, 2:90] <- Funcs(xi = xdesign.matrix[i, 1], tdiff = tdiff.analyse)
+    xdesign.matrix[i, 2: (matrix.cols + 1)] <- Funcs(xi = xdesign.matrix[i, 1], tdiff = tdiff.analyse)[[3]]
   }
 
   xa                    <- numeric(length = 7)
@@ -176,7 +177,7 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   }
 
   #Prepare joins on numm for xdesign and design.frame
-  colnames(xdesign.matrix) <- c("numm", paste0("V","", seq(1:89)))
+  colnames(xdesign.matrix) <- c("numm", paste0("V","", seq(1 : matrix.cols)))
   xdesign.matrix           <- data.table(xdesign.matrix)
 
   setkey(xdesign.matrix, numm)
@@ -226,7 +227,7 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
 
   for (ii in nummsa : nummse) {
     n     <- n + 1L
-    afunc <- mm[n, 2:90]
+    afunc <- mm[n, 2:(matrix.cols + 1)]
     for (k in 1 : km) {
       m             <- m + 1L
       coeff         <- fitting.coef[[k]]
