@@ -1,3 +1,16 @@
+TideCurves 0.0.4
+----------------
+
+Changes:
+
+* Long-period costituents have been reassesst by Andreas Boesch & Sylvin Mueller-Navarra, resulting in a different set of partial tides.
+* Speed up of computations.
+* The column "date_time" in solar and lunar synthesis has now the same format as the input format.
+* The column "date_time" in solar and lunar synthesis is now of type character.
+* Coefficents returned by TideCurve are now in the format of km list elements and 1-row matrices.
+* Added new references in the description.
+* Changes in ResCurve function, mainly speed up.
+
 TideCurves 0.0.3
 ----------------
 

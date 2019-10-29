@@ -59,7 +59,9 @@ TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
 \references{
 Godin, Gabriel (1972) The Analysis of Tides. Toronto, 264pp
 
+\url{https://www.ocean-sci.net/15/1363/2019/}
+
 \url{http://tidesandcurrents.noaa.gov/publications/glossary2.pdf}
 
-\url{http://www.bsh.de/de/Produkte/Buecher/Berichte_/Bericht50/BSH-Bericht50.pdf}
+\url{https://www.bsh.de/DE/PUBLIKATIONEN/_Anlagen/Downloads/Meer_und_Umwelt/Berichte-des-BSH/Berichte-des-BSH-50_de.pdf}
 }

@@ -11,98 +11,97 @@ Funcs <-  function(tdiff, xi) {
   xi  <- rad * xi
 
   omegas <- vector()
-  omegas[ 1]<-0.054809904
-  omegas[ 2]<-0.115308512
-  omegas[ 3]<-0.904885870
-  omegas[ 4]<-1.020194382
-  omegas[ 5]<-1.809771741
-  omegas[ 6]<-2.040388764
-  omegas[ 7]<-11.597841752
-  omegas[ 8]<-11.713150263
-  omegas[ 9]<-13.468112100
-  omegas[10]<-13.522922004
-  omegas[11]<-13.583420612
-  omegas[12]<-13.638230516
-  omegas[13]<-13.693040419
-  omegas[14]<-15.563310768
-  omegas[15]<-23.426300526
-  omegas[16]<-24.215877885
-  omegas[17]<-25.181262364
-  omegas[18]<-25.236072267
-  omegas[19]<-25.290882171
-  omegas[20]<-25.351380779
-  omegas[21]<-27.045844008
-  omegas[22]<-27.161152519
-  omegas[23]<-27.221651128
-  omegas[24]<-27.276461031
-  omegas[25]<-27.331270935
-  omegas[26]<-36.949222530
-  omegas[27]<-37.738799889
-  omegas[28]<-38.704184367
-  omegas[29]<-38.758994271
-  omegas[30]<-38.813804174
-  omegas[31]<-38.874302783
-  omegas[32]<-38.989611294
-  omegas[33]<-40.799383035
-  omegas[34]<-49.451950152
-  omegas[35]<-50.472144534
-  omegas[36]<-52.281916275
-  omegas[37]<-52.512533298
-  omegas[38]<-54.552922062
-  omegas[39]<-62.185294797
-  omegas[40]<-63.995066538
-  omegas[41]<-66.035455302
-  omegas[42]<-75.708216801
-  omegas[43]<-77.748605565
-  omegas[44]<-100.944289068
+  omegas[ 1]<-0.0548098
+  omegas[ 2]<-0.2306165
+  omegas[ 3]<-1.0201944
+  omegas[ 4]<-1.8097724
+  omegas[ 5]<-2.0403886
+  omegas[ 6]<-11.5978420
+  omegas[ 7]<-11.7131503
+  omegas[ 8]<-12.3874200
+  omegas[ 9]<-12.6180365
+  omegas[10]<-12.7881545
+  omegas[11]<-13.5229227
+  omegas[12]<-13.6382309
+  omegas[13]<-13.6930407
+  omegas[14]<-13.7535391
+  omegas[15]<-15.9640460
+  omegas[16]<-24.2158785
+  omegas[17]<-25.1812631
+  omegas[18]<-25.2360729
+  omegas[19]<-26.2562673
+  omegas[20]<-27.0458453
+  omegas[21]<-27.1611535
+  omegas[22]<-27.2764618
+  omegas[23]<-27.3312716
+  omegas[24]<-36.9492232
+  omegas[25]<-38.7589956
+  omegas[26]<-38.8743038
+  omegas[27]<-38.9896120
+  omegas[28]<-40.7993844
+  omegas[29]<-49.4519514
+  omegas[30]<-50.4721458
+  omegas[31]<-52.5125347
+  omegas[32]<-52.5673444
+  omegas[33]<-54.5529235
+  omegas[34]<-62.1852961
+  omegas[35]<-63.9950685
+  omegas[36]<-64.2256849
+  omegas[37]<-75.7082187
+  omegas[38]<-77.7486076
+  omegas[39]<-100.9442917
+  # omegas[41]<-66.035455302
+  # omegas[42]<-75.708216801
+  # omegas[43]<-77.748605565
+  # omegas[44]<-100.944289068
 
   omega_pos <- omegas
 
   iranks <- vector()
-  iranks[ 1]<-16
-  iranks[ 2]<-14
-  iranks[ 3]<-13
-  iranks[ 4]<-6
-  iranks[ 5]<-30
-  iranks[ 6]<-8
-  iranks[ 7]<-12
-  iranks[ 8]<-9
-  iranks[ 9]<-17
-  iranks[10]<-3
-  iranks[11]<-23
-  iranks[12]<-2
-  iranks[13]<-5
-  iranks[14]<-24
-  iranks[15]<-44
-  iranks[16]<-28
-  iranks[17]<-21
+  iranks[ 1]<-6
+  iranks[ 2]<-13
+  iranks[ 3]<-7
+  iranks[ 4]<-31
+  iranks[ 5]<-17
+  iranks[ 6]<-14
+  iranks[ 7]<-8
+  iranks[ 8]<-34
+  iranks[ 9]<-19
+  iranks[10]<-39
+  iranks[11]<-3
+  iranks[12]<-4
+  iranks[13]<-38
+  iranks[14]<-21
+  iranks[15]<-36
+  iranks[16]<-11
+  iranks[17]<-35
   iranks[18]<-1
-  iranks[19]<-36
-  iranks[20]<-19
-  iranks[21]<-31
-  iranks[22]<-10
-  iranks[23]<-26
-  iranks[24]<-4
-  iranks[25]<-35
-  iranks[26]<-11
-  iranks[27]<-37
-  iranks[28]<-38
-  iranks[29]<-15
-  iranks[30]<-23
-  iranks[31]<-39
-  iranks[32]<-29
-  iranks[33]<-27
-  iranks[34]<-32
-  iranks[35]<-7
-  iranks[36]<-43
-  iranks[37]<-18
-  iranks[38]<-25
-  iranks[39]<-40
-  iranks[40]<-34
-  iranks[41]<-42
-  iranks[42]<-20
-  iranks[43]<-41
-  iranks[44]<-33
+  iranks[19]<-12
+  iranks[20]<-33
+  iranks[21]<-15
+  iranks[22]<-2
+  iranks[23]<-27
+  iranks[24]<-10
+  iranks[25]<-16
+  iranks[26]<-24
+  iranks[27]<-22
+  iranks[28]<-23
+  iranks[29]<-29
+  iranks[30]<-5
+  iranks[31]<-9
+  iranks[32]<-37
+  iranks[33]<-30
+  iranks[34]<-25
+  iranks[35]<-28
+  iranks[36]<-26
+  iranks[37]<-20
+  iranks[38]<-18
+  iranks[39]<-32
+  # iranks[40]<-34
+  # iranks[41]<-42
+  # iranks[42]<-20
+  # iranks[43]<-41
+  # iranks[44]<-33
 
   omega_pos_rank <- iranks
   omega_sel      <- vector()

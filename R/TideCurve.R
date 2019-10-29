@@ -22,11 +22,12 @@
 #' \item{synthesis.lunar}{The lunar synthesis data as a data.table object in UTC}
 #' \item{data.matrix}{The data needed for analysis}
 #' \item{tide.curve}{The solar tide curve as a data.table object (provided time zone)}
-#' \item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis}
+#' \item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis as a list of 1-row matrices}
 #' \item{diff.analyse}{Time in days spanning the analysis}
 #' @references  Godin, Gabriel (1972) The Analysis of Tides. Toronto, 264pp
+#' @references \url{https://www.ocean-sci.net/15/1363/2019/}
 #' @references \url{http://tidesandcurrents.noaa.gov/publications/glossary2.pdf}
-#' @references \url{http://www.bsh.de/de/Produkte/Buecher/Berichte_/Bericht50/BSH-Bericht50.pdf}
+#' @references \url{https://www.bsh.de/DE/PUBLIKATIONEN/_Anlagen/Downloads/Meer_und_Umwelt/Berichte-des-BSH/Berichte-des-BSH-50_de.pdf}
 #' @examples
 #' TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
 #'              astime = "00:00:00",      aedate = "2015/12/31",
@@ -51,11 +52,12 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
 
   height  <- dataInput$height
   nspline <- 7
-
+  options(chron.origin = c(month = 1, day = 1, year = 1900))
   chron.origin <- chron(dates. = "1900/01/01",
                         times. = "00:00:00",
                         format = c(dates = "y/m/d", times = "h:m:s"),
                         out.format = c(dates = "y/m/d", times = "h:m:s"))
+
   tperiode.m2  <- 360 / 28.9841042373
   tmean.moon   <- tperiode.m2 * 2
   tm24         <- tmean.moon / 24
@@ -73,7 +75,7 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   otz.24       <- otz / 24
   tmondkm      <- numeric(length = km)
 
-  for (i in 1:km) {
+  for (i in 1 : km) {
     tmondkm[i] <- tmmh * (i - 0.5)
   }
 
@@ -128,7 +130,7 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   xdesign.matrix <- matrix(0.0, nrow=(max_numm - min_numm + 1), ncol = matrix.cols + 1)
   xdesign.matrix[, 1] <- seq.int(min_numm, max_numm, 1)
 
-  for(i in 1:nrow(xdesign.matrix)){
+  for(i in 1 : nrow(xdesign.matrix)){
     xdesign.matrix[i, 2: (matrix.cols + 1)] <- Funcs(xi = xdesign.matrix[i, 1], tdiff = tdiff.analyse)[[3]]
   }
 
@@ -138,7 +140,6 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   data.matrix           <- matrix(0.0, nrow = length.diffdays, ncol = 4)
   colnames(data.matrix) <- c("numm", "imm", "tmmttmond", "height")
   numm                  <- NULL
-  data.matrix           <- data.table(data.matrix)
   floored               <- floor((diff.days - tplus) / tm24)
   tdtobs.2              <- tdtobs / 2
   imm                   <- numeric()
@@ -170,43 +171,28 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
 
     ty                 <- splint(xa, ya, tmmttmond)
 
-    set(data.matrix, i = ii, j = 1L, value = ik)
-    set(data.matrix, i = ii, j = 2L, value = imm)
-    set(data.matrix, i = ii, j = 3L, value = tmmttmond)
-    set(data.matrix, i = ii, j = 4L, value = ty)
+    data.matrix[ii, ]  <- c(ik, imm, tmmttmond, ty)
   }
 
   #Prepare joins on numm for xdesign and design.frame
   colnames(xdesign.matrix) <- c("numm", paste0("V","", seq(1 : matrix.cols)))
-  xdesign.matrix           <- data.table(xdesign.matrix)
-
-  setkey(xdesign.matrix, numm)
-  setkey(data.matrix, numm)
+  xdesign.matrix           <- data.table(xdesign.matrix, key = "numm")
+  data.matrix              <- data.table(data.matrix, key = "numm")
 
   design.frame     <- data.matrix[(numm >= numma) & (numm <= numme)]
   design.frame     <- xdesign.matrix[design.frame]
+  setkey(design.frame, "imm")
 
-  lm.fits             <- list()
-  fitting.coef        <- list()
-  i.analyse           <- matrix(nrow = km, ncol = 1)
-  rownames(i.analyse) <- 1 : km
-  temp.design         <- list()
-  design.list         <- list()
-
-  for(k in 1 : km) {
-    temp.design   <- design.frame[imm == k, ]
-    setkey(temp.design, height)
-    temp.design   <- temp.design[(height >= (mean(height) - 3 * sd(height))) & (height <= (mean(height) +  3 * sd(height)))]
-
-    lm.fitting    <- lm.fit(x = as.matrix(temp.design[, !c("height", "numm", "imm", "tmmttmond"), with = FALSE]),
-                            y = as.matrix(temp.design[, "height", with = FALSE]))
-
-    lm.fits[[k]]      <- lm.fitting
-    design.list[[k]]  <- temp.design
-    fitting.coef[[k]] <- coef(lm.fitting)
-
-    fitting.coef[[k]][is.na(fitting.coef[[k]])] <- 0
+  fitting.coef <- design.frame[,{
+    m.h   <- mean(height)
+    sd.h  <- 3 * sd(height)
+    m_mat <- as.matrix(.SD[(height >= m.h - sd.h) & (height <= m.h + sd.h)])
+    as.list(coef(lm.fit(x = m_mat[, !colnames(m_mat) %in% c("height", "numm", "imm", "tmmttmond")],
+                        y = m_mat[, "height"])))
   }
+  , by = "imm"]
+
+  fitting.coef <- lapply(split(fitting.coef, by = "imm", keep.by = FALSE), as.matrix)
 
   m.length              <- (nummse - nummsa + 1) * km
   time1                 <- numeric(length = m.length)
@@ -216,9 +202,7 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
   coeff                 <- numeric(length = km)
   time.height           <- matrix(1.0, nrow = (m.length), ncol = 4)
   colnames(time.height) <- c("height", "i", "k", "time1")
-  time.height           <- data.table(time.height)
 
-  options(chron.origin = c(month = 1, day = 1, year = 1900))
 
   #Lunar synthesis
   mm <- as.matrix(xdesign.matrix[numm >= nummsa][numm <= nummse])
@@ -236,14 +220,19 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
       height[m]     <- summe
       tobstime[m]   <- round(time1[m] / tdtobs) * tdtobs
 
-      set(time.height, i = m, j = 1L, value = height[m])
-      set(time.height, i = m, j = 2L, value = ii)
-      set(time.height, i = m, j = 3L, value = k)
-      set(time.height, i = m, j = 4L, value = time1[m])
+      time.height[m, ] <- c(height[m], ii, k, time1[m])
     }
   }
-  time.height[,date_time := chron(dates. = time1)]
-  setcolorder(time.height, c("date_time", "height", "i", "k", "time1"))
+
+  prediction_date <- NULL
+  prediction_time <- NULL
+  date_time       <- NULL
+
+  time.height <- data.table(time.height)
+  time.height[,date_time := format(chron(dates. = (round(time1 * 86400, digits = 0) / 86400) + 1 / 864000),
+                                   "%Y/%m/%d %H:%M:%S")]
+  setcolorder(time.height, c("date_time", "time1", "height", "i", "k"))
+  time.height[, c("prediction_date", "prediction_time") := tstrsplit(date_time, split = " ")]
 
   #Solar synthesis
   l           <- 1L
@@ -281,19 +270,15 @@ TideCurve <- function(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, a
     l           <- l + 1L
   }
 
-  #Add date/time columns to synthesis
-  prediction_date <- NULL
-  prediction_time <- NULL
-  date_time       <- NULL
-  tidal.curve     <- data.table(date_time = chron(dates. = (tsyntstd + 1 / 864000)), time1 = as.numeric(tsyntstd) + 1 / 864000, height = ty)
+  #Add date/time columns to solar synthesis
 
-  tidal.curve[, prediction_date := strftime(dates(date_time), format = "%Y/%m/%d")]
-  tidal.curve[, prediction_time := format(date_time, "%H:%M:%S")]
+  tidal.curve     <- data.table(date_time = format(chron(dates. = (tsyntstd + 1 / 864000)), "%Y/%m/%d %H:%M:%S"),
+                                time1  = as.numeric(tsyntstd) + 1 / 864000,
+                                height = ty)
+  tidal.curve[, c("prediction_date", "prediction_time") := tstrsplit(date_time, split = " ")]
   tidal.curve <- tidal.curve[(prediction_date != "1900/01/01" & height != 0)]
-  time.height[, prediction_date := strftime(dates(date_time), format = "%Y/%m/%d")]
-  time.height[, prediction_time := format(chron(dates. = (round(as.numeric(date_time) * 86400, digits = 0) / 86400) + 1 / 864000), "%H:%M:%OS")]
 
-  #we return a list called report containing the tide curve (lunar and solar), diff.analyse, i.analyse and lm.coeff and data matrix
+  #we return a list called report containing the tide curve (lunar and solar), diff.analyse, lm.coeff and data matrix
   report                 <- list()
   report$data.matrix     <- data.matrix[(numm >= numma) & (numm <= numme)]
   report$synthesis.lunar <- time.height
