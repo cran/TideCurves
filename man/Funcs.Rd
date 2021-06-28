@@ -15,5 +15,5 @@ Funcs(tdiff, xi)
 A list with the selected angular velocities, their ranks and the predictor vector (Values between -1, 1).
 }
 \description{
-Returns predictor vector for design matrix from 44 astronomical angular velocities.
+Returns predictor vector for design matrix from 39 astronomical angular velocities.
 }

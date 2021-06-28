@@ -1,3 +1,12 @@
+TideCurves 0.0.5
+----------------
+
+Changes:
+
+* Introducing two new exported functions: BuildTC() & SynTC(). Please see examples and README.
+* Added a new internal function BuildDesign().
+
+
 TideCurves 0.0.4
 ----------------
 

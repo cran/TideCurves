@@ -1,5 +1,5 @@
 #' Returns predictor vector for design matrix
-#' @description Returns predictor vector for design matrix from 44 astronomical angular velocities.
+#' @description Returns predictor vector for design matrix from 39 astronomical angular velocities.
 #' @param xi Transit index
 #' @param tdiff Length of input time series.
 #' @return A list with the selected angular velocities, their ranks and the predictor vector (Values between -1, 1).

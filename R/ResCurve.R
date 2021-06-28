@@ -1,12 +1,36 @@
 #' Computes the residuum between the observed data and the synthesis
 #' @description This function computes the residuum of the computed lunar and solar synthesis
 #' and the observed data
-#' @param tcData The results from the TideCurve function. Warning: The synthesis period must overlap with the analysis period.
-#' Must be a data.table object.
+#' @param tcData The results from TideCurve or BuildTC + SynTC. Warning: The synthesis period must overlap with the analysis period.
+#' Must be a data.table object. Please see examples.
 #' @param obsData The observation data with the columns observation_date, observation_time and height. See attached data for correct formats.
 #' @return A list with two data.tables with the joined data input and the computed difference between the observed data and
 #' the synthesis (res)
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' #Using TideCurve
+#' tc <- TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
+#'              astime = "00:00:00",      aedate = "2015/12/31",
+#'              aetime = "23:30:00",      ssdate = "2015/12/17",
+#'              sstime = "00:00:00",      sedate = "2015/12/31",
+#'              setime = "23:30:00")
+#' res_tc <- ResCurve(tc, tideObservation)
+#'
+#' #Using BuildTC and SynTC
+#' your_model <- BuildTC(dataInput = tideObservation, asdate = "2015/12/06",
+#'              astime = "00:00:00", aedate = "2016/12/31",
+#'              aetime = "23:30:00", keep_data = TRUE)
+#'
+#' syn_tc <- SynTC(tmodel = your_model, ssdate = "2015/12/17", sstime = "00:00:00",
+#' sedate = "2015/12/31", setime = "23:30:00")
+#'
+#' syn_tc$data_matrix <- your_model$data_matrix
+#'
+#' res_tc_n <- ResCurve(syn_tc, tideObservation)
+#'
+#' }
 
 ResCurve<- function(tcData, obsData){
 
@@ -37,7 +61,7 @@ ResCurve<- function(tcData, obsData){
 
   #Lunar residuum
   syl <- copy(tcData$synthesis.lunar)
-  dam <- copy(tcData$data.matrix)
+  dam <- copy(tcData$data_matrix)
   syl[, numm_imm := paste(i, k, sep="_")]
   dam[, numm_imm := paste(numm, imm, sep="_")]
   setnames(syl, "height", "lsheight")

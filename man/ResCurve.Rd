@@ -7,8 +7,8 @@
 ResCurve(tcData, obsData)
 }
 \arguments{
-\item{tcData}{The results from the TideCurve function. Warning: The synthesis period must overlap with the analysis period.
-Must be a data.table object.}
+\item{tcData}{The results from TideCurve or BuildTC + SynTC. Warning: The synthesis period must overlap with the analysis period.
+Must be a data.table object. Please see examples.}
 
 \item{obsData}{The observation data with the columns observation_date, observation_time and height. See attached data for correct formats.}
 }
@@ -19,4 +19,28 @@ the synthesis (res)
 \description{
 This function computes the residuum of the computed lunar and solar synthesis
 and the observed data
+}
+\examples{
+\dontrun{
+#Using TideCurve
+tc <- TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
+             astime = "00:00:00",      aedate = "2015/12/31",
+             aetime = "23:30:00",      ssdate = "2015/12/17",
+             sstime = "00:00:00",      sedate = "2015/12/31",
+             setime = "23:30:00")
+res_tc <- ResCurve(tc, tideObservation)
+
+#Using BuildTC and SynTC
+your_model <- BuildTC(dataInput = tideObservation, asdate = "2015/12/06",
+             astime = "00:00:00", aedate = "2016/12/31",
+             aetime = "23:30:00", keep_data = TRUE)
+
+syn_tc <- SynTC(tmodel = your_model, ssdate = "2015/12/17", sstime = "00:00:00",
+sedate = "2015/12/31", setime = "23:30:00")
+
+syn_tc$data_matrix <- your_model$data_matrix
+
+res_tc_n <- ResCurve(syn_tc, tideObservation)
+
+}
 }

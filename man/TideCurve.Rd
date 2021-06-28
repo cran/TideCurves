@@ -4,8 +4,20 @@
 \alias{TideCurve}
 \title{Computes tide curves}
 \usage{
-TideCurve(dataInput, otz = 1, km = -1, mindt = 30, asdate, astime, aedate,
-  aetime, ssdate, sstime, sedate, setime)
+TideCurve(
+  dataInput,
+  otz = 1,
+  km = -1,
+  mindt = 30,
+  asdate,
+  astime,
+  aedate,
+  aetime,
+  ssdate,
+  sstime,
+  sedate,
+  setime
+)
 }
 \arguments{
 \item{dataInput}{A data frame with the columns observation_date, observation_time and height. See attached data for correct formats.}
@@ -38,7 +50,7 @@ Returns a list with elements of the analysis, fitting and the tidal curve for gi
 \item{synthesis.lunar}{The lunar synthesis data as a data.table object in UTC}
 \item{data.matrix}{The data needed for analysis}
 \item{tide.curve}{The solar tide curve as a data.table object (provided time zone)}
-\item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis}
+\item{lm.coeff}{Coefficients for the km fitted linear models used in the synthesis as a list of 1-row matrices}
 \item{diff.analyse}{Time in days spanning the analysis}
 }
 \description{
@@ -49,19 +61,17 @@ Therefore the analysis time period
 should start one lunar day after the first observation and end one lunar day before the last observation.
 }
 \examples{
-TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
+\dontrun{TideCurve(dataInput = tideObservation, asdate = "2015/12/06",
              astime = "00:00:00",      aedate = "2015/12/31",
              aetime = "23:30:00",      ssdate = "2015/12/17",
              sstime = "00:00:00",      sedate = "2015/12/31",
-             setime = "23:30:00")
+             setime = "23:30:00")}
 
 }
 \references{
 Godin, Gabriel (1972) The Analysis of Tides. Toronto, 264pp
 
-\url{https://www.ocean-sci.net/15/1363/2019/}
+\doi{10.5194/os-15-1363-2019}
 
-\url{http://tidesandcurrents.noaa.gov/publications/glossary2.pdf}
-
-\url{https://www.bsh.de/DE/PUBLIKATIONEN/_Anlagen/Downloads/Meer_und_Umwelt/Berichte-des-BSH/Berichte-des-BSH-50_de.pdf}
+\url{https://www.bsh.de/DE/PUBLIKATIONEN/_Anlagen/Downloads/Meer_und_Umwelt/Berichte-des-BSH/Berichte-des-BSH_50_de.pdf?__blob=publicationFile&v=13}
 }
